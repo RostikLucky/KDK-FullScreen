@@ -1,7 +1,7 @@
 # KDK-FullScreen
 > KDK FullScreen работет в браузерах **Google Chrome, Mozilla FireFox, Yandex Browser, Opera**.
 > 
-> Для запуска программы, откройте файл KDK FullScreen.html
+> Для запуска программы, откройте файл **"KDK FullScreen.html"**
 > 
 > [Скачать KDK FullScreen](https://github.com//RostikLucky/KDK-FullScreen/archive/refs/heads/main.zip)
 ## Интерфейс
