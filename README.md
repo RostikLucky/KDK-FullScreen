@@ -1,2 +1,4 @@
 # KDK-FullScreen
- Программа для передачи фото или видео на второй экран
+KDK-FullScreen работет в браузерах Google Chrome, Mozilla FireFox, Yandex Browser, Opera.
+## Интерфейс
+
