@@ -16,3 +16,5 @@
 ![](https://github.com/RostikLucky/KDK-FullScreen/blob/main/Screenshots/6.png?raw=true "0pk")
 ## Перетаскивание слайда
 ![](https://github.com/RostikLucky/KDK-FullScreen/blob/main/Screenshots/7.png?raw=true "0pk")
+# Пожертвования
+* Если вы хотите поддержать разработчика, то можете отправить копейку через https://www.donationalerts.com/r/rostiklucky 
