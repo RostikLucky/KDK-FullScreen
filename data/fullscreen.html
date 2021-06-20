@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="shortcut icon" href="ico.png" type="image/png">
+	<title>KDK FullScreen</title>
+	<style type="text/css">
+		* {
+			margin: 0;
+			padding: 0;
+		}
+
+		#main {
+			width: 100%;
+			height: 100vh;
+			background: black;
+			color: white;
+			font-family: 'font1'; 
+		    display: flex;
+		    justify-content: center;
+		    align-items: center;
+		    font-size: 3vw;
+		}
+
+		.main{
+			width: 100%;
+			height: 100%;
+			opacity: 0;
+			position: absolute;
+			top: 0;
+			left: 0;
+			background-repeat: no-repeat;
+			background-size: cover;
+			background-position: center;
+		}
+
+		@font-face {
+			font-family: 'font1'; 
+			src: url(19847.otf); 
+		}
+
+		#main_3 {
+			opacity: 0;
+		}
+
+		#main_4 {
+			opacity: 0;
+		}
+	</style>
+</head>
+<body>
+<div id="main" onclick="openFullscreen()">
+	<div id="title">Нажмите на это окно, чтобы открыть его на весь экран</div>
+	<div id="main_1" class="active main"></div>
+	<div id="main_2" class="main"></div>
+	<div id="main_3" class="main"><video id="window_player" style="width: 100%; height: 100%;" msallowfullscreen webkitallowfullscreen mozallowfullscreen allowfullscreen muted="muted"></video></div>
+	<div id="main_4" class="main" style="background: url('b.png');"></div>
+</div>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript">
+	time = 0;
+
+	var elem = document.getElementById("main");
+	function openFullscreen() {
+		$("#title").remove();
+	  if (elem.requestFullscreen) {
+	    elem.requestFullscreen();
+	  } else if (elem.webkitRequestFullscreen) {
+	    elem.webkitRequestFullscreen();
+	  } else if (elem.msRequestFullscreen) {
+	    elem.msRequestFullscreen();
+	  }
+	  elem.setAttribute("onclick", "closeFullscreen()");
+	}
+
+	function closeFullscreen() {
+	  if (document.exitFullscreen) {
+	    document.exitFullscreen();
+	  } else if (document.webkitExitFullscreen) {
+	    document.webkitExitFullscreen();
+	  } else if (document.msExitFullscreen) {
+	    document.msExitFullscreen();
+	  }
+	  elem.setAttribute("onclick", "openFullscreen()");
+	}
+
+	speed_slide = 0;
+
+	if (localStorage.getItem('speed_slide') != null) {
+		if (localStorage.getItem('speed_slide') == "0") {
+			speed_slide = 0;
+		} else {
+			speed_slide = 1;
+		}
+	}
+
+	if (localStorage.getItem('display_size') != null) {
+		if (localStorage.getItem('display_size') == "1") {
+			$("#main_1").css({"background-size": "auto"});
+			$("#main_2").css({"background-size": "auto"});
+		}
+		if (localStorage.getItem('display_size') == "2") {
+			$("#main_1").css({"background-size": "contain"});
+			$("#main_2").css({"background-size": "contain"});
+		}
+		if (localStorage.getItem('display_size') == "3") {
+			$("#main_1").css({"background-size": "cover"});
+			$("#main_2").css({"background-size": "cover"});
+		}
+	}
+
+	FTB = false;
+	param_s = 0;
+
+	const bc = new BroadcastChannel('KDK-FS');
+	bc.addEventListener('message', function (mess) { 
+		mess = mess.data;
+		if (mess.indexOf("<PHOTO>") != -1) {
+			$("#title").remove();
+			bc.postMessage('<PAUSE_VIDEO>'+param_s); 
+			image = mess.replace('<PHOTO>background-image:', "").replace(')', "");
+			next(image);
+		}
+
+		if (mess.indexOf("<VIDEO>") != -1) {
+			$("#title").remove();
+			bc.postMessage('<PAUSE_VIDEO>'+param_s); 
+			param_video = mess.replace('<VIDEO>', "");
+			param_s = param_video.split("<AAAA>")[0];
+			video = param_video.split("<AAAA>")[1];
+			time = param_video.split("<AAAA>")[2];
+			next_vid(video, time);
+		}
+
+		if (mess.indexOf("<speed_slide>0") != -1) {
+			speed_slide = 0;
+		}
+
+		if (mess.indexOf("<speed_slide>1") != -1) {
+			speed_slide = 1;
+		}
+
+		if (mess.indexOf("<FTB>1") != -1) {
+			FTB = true;
+			$("#main_4").addClass("active");
+			$("#main_4").css({"opacity": "1"});
+			if (speed_slide == 1) {
+				$("#main_4").css({"transition": "1s"});
+			}
+
+			if ($("#main_3").hasClass("active")) {
+				bc.postMessage('<PAUSE_VIDEO>'+param_s); 
+				$("#window_player").trigger('pause');
+			}
+		}
+
+		if (mess.indexOf("<FTB>0") != -1) {
+			FTB = false;
+			$("#main_4").removeClass("active");
+			$("#main_4").css({"opacity": "0"});
+
+			if ($("#main_3").hasClass("active")) {
+				bc.postMessage('<PLAY_VIDEO>'+param_s); 
+				$("#window_player").trigger('play');
+			}
+		}
+
+		if (mess.indexOf("<display_size>1") != -1) {
+			$("#main_1").css({"background-size": "auto"});
+			$("#main_2").css({"background-size": "auto"});
+		}
+
+		if (mess.indexOf("<display_size>2") != -1) {
+			$("#main_1").css({"background-size": "contain"});
+			$("#main_2").css({"background-size": "contain"});
+		}
+
+		if (mess.indexOf("<display_size>3") != -1) {
+			$("#main_1").css({"background-size": "cover"});
+			$("#main_2").css({"background-size": "cover"});
+		}
+
+		if (mess.indexOf("<VIDEO_TIME>"+param_s) != -1) {
+			document.getElementById('window_player').currentTime = mess.split("<AAAA>")[1] * 1;
+			time = mess.split("<AAAA>")[1] * 1;
+		}
+
+		if (mess.indexOf("<POST_TIME>"+param_s) != -1) {
+			next_vid(video, mess.split("<AAAA>")[1] * 1);
+		}
+
+		if (mess.indexOf("<PLAY>"+param_s) != -1) {
+			$("#window_player").trigger('play');
+		}
+
+		if (mess.indexOf("<PAUSE>"+param_s) != -1) {
+			$("#window_player").trigger('pause');
+		}
+
+	});
+
+	function next(image) {
+		$("#main_1").css({"transition": "0s"});
+		$("#main_2").css({"transition": "0s"});
+		$("#main_3").css({"transition": "0s"});
+
+		if ($("#main_3").hasClass("active")) {
+			$("#main_3").removeClass("active");
+			$("#main_3").css({"opacity": "0"});
+			$("#window_player").trigger('pause');
+
+			$("#main_2").css({"background-image": "none"});
+			$("#main_2").css({"background-image": image});
+			$("#main_2").addClass("active");
+			$("#main_1").css({"opacity": "0"});
+			$("#main_2").css({"opacity": "1"});
+		} else {
+			if ($("#main_1").hasClass("active")) {
+				$("#main_2").css({"background-image": "none"});
+				$("#main_2").css({"background-image": image});
+				$("#main_1").removeClass("active");
+				$("#main_2").addClass("active");
+				$("#main_1").css({"opacity": "0"});
+				$("#main_2").css({"opacity": "1"});
+			} else {
+				$("#main_1").css({"background-image": "none"});
+				$("#main_1").css({"background-image": image});
+				$("#main_2").removeClass("active");
+				$("#main_1").addClass("active");
+				$("#main_2").css({"opacity": "0"});
+				$("#main_1").css({"opacity": "1"});
+			}
+		}
+
+		if (speed_slide == 1) {
+			$("#main_1").css({"transition": "1s"});
+			$("#main_2").css({"transition": "1s"});
+			$("#main_3").css({"transition": "1s"});
+		}
+	}
+
+	function next_vid(video, time) {
+		$("#main_1").css({"transition": "0s"});
+		$("#main_2").css({"transition": "0s"});
+		$("#main_3").css({"transition": "0s"});
+
+		$("#main_1").css({"opacity": "0"});
+		$("#main_2").css({"opacity": "0"});
+		$("#window_player").attr("src", video);
+		$("#main_3").addClass("active");
+		$("#main_3").css({"opacity": "1"});
+
+		if (speed_slide == 1) {
+			$("#main_1").css({"transition": "1s"});
+			$("#main_2").css({"transition": "1s"});
+			$("#main_3").css({"transition": "1s"});
+		}
+
+		document.getElementById('window_player').addEventListener('loadedmetadata', function() {
+			time = time * 1;
+			this.currentTime = time;
+			if (FTB == false) {
+				bc.postMessage('<PLAY_VIDEO>'+param_s); 
+				$("#window_player").trigger('play');
+			}
+		}, false);	
+	}
+///bc.postMessage('<PAUSE_VIDEO>'+param_s); 
+</script>
+</body>
+</html>

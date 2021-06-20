@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="shortcut icon" href="data/ico.png" type="image/png">
+	<link href="data/fontawesome/css/all.css" rel="stylesheet">
+	<link href="data/jquery-ui.min.css" rel="stylesheet">
+	<title>KDK FullScreen</title>
+	<style type="text/css">
+
+		:root {
+			--hue_rotate: 0deg;
+			--bg_color: #1d1d1d;
+			--bg_menu: #151515;
+			--border: #152756;
+			--button: #244598;
+			--text-w: white;
+			--text-b: #e0e0e0;
+			--text-g: #dadada;
+		}
+
+		* {
+			padding: 0;
+			margin: 0;
+		}
+
+		@font-face {
+			font-family: 'font1'; 
+			src: url(data/19847.otf); 
+		}
+
+		@font-face {
+			font-family: 'font2'; 
+			src: url(data/20339.ttf); 
+		}
+
+		body {
+			background: var(--bg_color);
+			font-family: font2;
+		}
+
+		.preview {
+			width: 330px;
+		    height: 205.6px;
+			background: black;
+		    margin-top: 25px;
+		    margin-left: 10px;
+		    border: 1px solid var(--border);
+		    cursor: pointer;
+		    border-radius: 15px;
+		    position: relative;
+    		overflow: hidden;
+    		background-position: center;
+		    background-size: cover;
+		    background-repeat: no-repeat;
+		    box-shadow: 0px 0px 11px 6px rgb(36 69 152 / 17%);
+		}
+
+
+		.window {
+			width: calc(100% - 100px);
+			height: calc(100vh - 20px);
+			overflow-y: scroll;
+			position: absolute;
+		    top: 0px;
+		    left: 0px;
+		    vertical-align: middle;
+		    display: flex;
+		    justify-content: center;
+		    flex-wrap: wrap;
+		    flex-direction: row;
+		    padding: 10px;
+		    margin-left: 50px;
+		}
+
+		.name {
+			background: var(--bg_color);
+			text-align: center;
+		    font-size: 5vw;
+		    width: 100%;
+		    height: 100vh;
+		    line-height: 100vh;
+		    color: var(--text-g);
+		    font-family: font1;
+		}
+
+		.slide {
+			position: relative;
+		    width: 330px;
+		    height: 205.6px;
+		    background: var(--bg_menu);
+		    margin: 10px;
+		    border-radius: 15px;
+		    float: left;
+		    border: 1px solid var(--border);
+		    cursor: pointer;
+		    overflow: hidden;
+		    box-shadow: 0px 0px 11px 6px rgb(36 69 152 / 17%);
+		} 
+
+		.slide_title {
+			width: 100%;
+			height: 40px;
+			position: absolute;
+			bottom: 0px;
+			background: var(--bg_menu);
+			color: var(--text-b);
+		}
+
+		.slide_preview {
+			position: relative;
+			width: 100%;
+			height: calc(100% - 40px);
+			background: black;
+		    background-position: center;
+		    background-size: cover;
+		    background-repeat: no-repeat;
+		}
+
+		.slide_etc {
+			width: 40px;
+			height: 100%;
+			border-left: 1px solid var(--border);
+			position: absolute;
+			right: 0px;
+			text-align: center;
+		    line-height: 40px;
+		    font-size: 16px;
+		    padding-right: 1px;
+		}
+
+		.slide_id {
+			width: 40px;
+			height: 100%;
+			border-right: 1px solid var(--border);
+			position: absolute;
+			left: 0px;
+			text-align: center;
+		    line-height: 40px;
+		    font-size: 16px;
+		    padding-left: 1px;
+		}
+
+		.slide_etc > select {
+			width: 100%;
+			height: 100%;
+			position: absolute;
+			opacity: 0;
+			top: 0px;
+			left: 0px;
+		}
+
+		.slide_title > input {
+		   	width: calc(100% - 102px);
+		    height: 40px;
+		    font-size: 16px;
+		    position: absolute;
+		    border: 0px;
+		    outline: none;
+		    padding-left: 10px;
+		    font-family: font2;
+		    background: none;
+		    margin-left: 40px;
+		    color: var(--text-b);
+		}
+
+		.color-w {
+			color: var(--text-w);
+		}
+
+		.color-b {
+			color: var(--text-b);
+		}
+
+		.color-g {
+			color: var(--text-g);
+		}
+
+		#add_slide > input {
+			width: 100%;
+			height: 100%;
+			position: absolute;
+			top: 0;
+			left: 0;
+			z-index: 2;
+			opacity: 0;
+			cursor: pointer;
+		}
+
+		#add_slide {
+			display: flex;
+		    justify-content: center;
+		    flex-wrap: wrap;
+		    align-content: center;
+		}
+
+		.window_style {
+		    z-index: 5;
+			width: 40px;
+			height: 240px;
+			border-left: 1px solid var(--border);
+			border-bottom: 1px solid var(--border);
+			background: var(--bg_menu);
+			position: absolute;
+		    top: 0px;
+    		right: 0px;
+    		border-radius: 0px 0px 0px 15px;
+		    text-align: center;
+		    box-shadow: 0px 0px 11px 6px rgb(36 69 152 / 17%);
+		}
+
+		.name_style {
+		    z-index: 5;
+			width: 40px;
+			height: 245px;
+			border-right: 1px solid var(--border);
+			border-bottom: 1px solid var(--border);
+			background: var(--bg_menu);
+			position: absolute;
+		    top: 0px;
+    		left: 0px;
+    		border-radius: 0px 0px 15px 0px;
+		    text-align: center;
+		    box-shadow: 0px 0px 11px 6px rgb(36 69 152 / 17%);
+		    overflow: hidden;
+		}
+
+		.display_style {
+		    display: flex;
+			z-index: 5;
+			height: 40px;
+			width: 375px;
+			border-right: 1px solid var(--border);
+			border-top: 1px solid var(--border);
+			background: var(--bg_menu);
+			text-align: center;
+		    box-shadow: 0px 0px 11px 6px rgb(36 69 152 / 17%);
+		    overflow: hidden;
+		    line-height: 40px;
+		    position: absolute;
+		    border-radius: 0px 15px 0px 0px;
+		    bottom: 0px;
+    		left: 0px;
+    		color: var(--text-b);
+		}
+
+		.style_true {
+			background: var(--button);
+			transition: 0.5s;
+		}
+
+		.style_false {
+			transition: 0.5s;
+		}
+
+		input[type=range][orient=vertical] {
+		    -webkit-appearance: slider-vertical;
+		    width: 8px;
+		    height: calc(100% - 155px);
+		}
+
+		.window_player {
+			width: 100%;
+			height: 100%;
+		}
+</style>
+</head>
+<body>
+	<div class="name">KDK FullScreen</div>
+	<div class="name_style">
+		<div class="style_false" style="width: 100%; height: 40px; border-bottom: 1px solid var(--border); background: url(data/ico2.png); background-size: contain;"></div>
+		<div class="style_false" style="width: 100%; height: 40px; border-bottom: 1px solid var(--border); text-align: center; line-height: 40px; cursor: pointer; color: var(--text-b);" 
+			 onclick="save_project(this)">
+			<i class="fa fa-hdd" aria-hidden="true"></i>
+		</div>
+		<div class="style_false" style="width: 100%; height: 40px; border-bottom: 1px solid var(--border); text-align: center; line-height: 40px; cursor: pointer; color: var(--text-b); position: relative;">
+			<i class="fa fa-upload" aria-hidden="true"></i>
+			<input type="file" name="filefield" onchange="load_project(this)" multiple="multiple" style="position: absolute; width: 100%; height: 100%; top: 0px; left: 0px; opacity: 0;">
+		</div>
+		<div class="style_false" style="width: 100%; height: 40px; border-bottom: 1px solid var(--border); text-align: center; line-height: 40px; cursor: pointer; color: var(--text-b);"
+			 onclick="fullscreen()">
+			<i class="fa fa-window-restore" aria-hidden="true"></i>
+		</div>
+		<div class="style_false" style="width: 100%; height: 40px; border-bottom: 1px solid var(--border); text-align: center; line-height: 40px; cursor: pointer; color: var(--text-b);"
+			 onclick="speed_slide(this)" id="speed_slide">
+			0 <i class="fa fa-clock" style="font-size: 13px;" aria-hidden="true"></i>
+		</div>
+		<div class="style_false" style="width: 100%; height: 40px; border-bottom: 1px solid var(--border); text-align: center; line-height: 40px; cursor: pointer; color: var(--text-b); font-size: 13px;"
+			 onclick="FTB(this)">
+			FTB
+		</div>
+	</div>
+	<div class="display_style">
+		<div class="style_false" style="width: auto; height: 40px; border-right: 1px solid var(--border); text-align: center; line-height: 40px; color: var(--text-b); font-size: 13px; padding-left: 10px; padding-right: 10px;">
+			Размер изображения: 
+		</div>
+		<div class="style_false display_size" style="width: auto; height: 40px; border-right: 1px solid var(--border); text-align: center; line-height: 40px; cursor: pointer; color: var(--text-b); font-size: 13px; padding-left: 10px; padding-right: 10px;" onclick="display_size(1)">
+			<i class="fa fa-window-restore" aria-hidden="true"></i> Auto
+		</div>
+		<div class="style_false display_size" style="width: auto; height: 40px; border-right: 1px solid var(--border); text-align: center; line-height: 40px; cursor: pointer; color: var(--text-b); font-size: 13px; padding-left: 10px; padding-right: 10px;" onclick="display_size(2)">
+			<i class="fa fa-window-restore" aria-hidden="true"></i> Contain
+		</div>
+		<div class="style_false display_size" style="width: auto; height: 40px; text-align: center; line-height: 40px; cursor: pointer; color: var(--text-b); font-size: 13px; padding-left: 10px; padding-right: 10px;"
+			 onclick="display_size(3)">
+			<i class="fa fa-window-restore" aria-hidden="true"></i> Cover
+		</div>
+	</div>
+	<div class="window_style">
+		<div class="style_false" style="width: 100%; height: 40px; border-bottom: 1px solid var(--border); text-align: center; line-height: 40px; cursor: pointer; color: var(--text-b);" 
+			 onclick="fullscreen_main(this)">
+			<i class="fa fa-desktop" aria-hidden="true"></i>
+		</div>
+		<div class="style_false" style="width: 100%; height: 40px; border-bottom: 1px solid var(--border); text-align: center; line-height: 40px; cursor: pointer; color: var(--text-b);" 
+			 onclick="block_sort(this)">
+			<i class="fa fa-unlock" aria-hidden="true"></i>
+		</div>
+		<i class="fa fa-file-image" aria-hidden="true" style="margin-top: 10px; margin-bottom: 10px; color: var(--text-b);"></i>
+		<br>
+		<input type="range" orient="vertical" oninput="change_size(this)" id="change_size"/>
+		<br>
+		<i class="fa fa-file-image" aria-hidden="true" style="margin-top: 10px; margin-bottom: 10px; font-size: 12px; color: var(--text-b);"></i>
+	</div>
+	<div class="window"></div>
+<script type="text/javascript" src="data/jquery.js"></script>
+<script type="text/javascript" src="data/jquery-ui.min.js"></script>
+<script type="text/javascript">
+	const bc = new BroadcastChannel('KDK-FS');
+	GET_VIDEO = "";
+
+	// Открыть окно FullScreen
+	function fullscreen() {
+		width_size = 950;
+		height_size = 580;
+		top_size = Math.round(window.screen.availHeight/2 - height_size/2);
+		left_size = Math.round(window.screen.availWidth/2 - width_size/2);
+		let params = `scrollbars=no, resizable=no, status=no, location=no, toolbar=no, menubar=no, width=`+width_size+`, height=`+height_size+`, left=`+left_size+`, top=`+top_size;
+		window.open('data/fullscreen.html', 'FullScreen', params);
+	}
+
+	/// Выбрать слайд
+	function select_slide(elem) {
+		$(".window").find(".slide").find(".slide_title").css({"background": "var(--bg_menu)"});
+		$(elem).parent().find(".slide_title").css({"background": "var(--button)"});
+		if ($(elem).parent().find(".slide_preview").attr("type") == "photo") {
+			bc.postMessage('<PHOTO>'+$(elem).parent().find(".slide_preview").attr("style")); 
+		}
+	}
+
+	/// Перетаскивание слайдов
+	$('.window').sortable({
+	  beforeStop: function( event, ui ) {
+	  	setTimeout(function () {
+			div_add_slide();
+	  	}, 100);
+	  }
+	});
+
+	/// Действие для слайда
+	function slide_action(elem) {
+		if ($(elem).val() == "slide_action_1") {
+			$(elem).parent().parent().parent().remove();
+			div_add_slide();
+		}
+	}
+
+	/// Кнопка "Добавить фото/видео"
+	div_add_slide();
+	function div_add_slide() {
+		$("#add_slide").remove();
+		$(".window").append(`
+			<div class="slide ui-sortable-handle" id="add_slide">
+				<div style="text-align: center; font-size: 40px; margin-top: -20px;"> 
+					<i class="fa fa-plus color-g" aria-hidden="true"></i> 
+					<div class="color-g" style="top: 0; width: 100%; height: 100%; text-align: center; font-size: 20px; margin-top: 10px;">Добавить фото/видео</div> 
+				</div>
+				<input type="file" name="filefield" onchange="input_add_slide(this)" multiple="multiple">
+			</div>`);
+		for (var i = 0; i < $(".window").find(".slide").length; i++) {
+			$(".window").find(".slide").eq(i).find(".slide_title").find(".slide_id").html(i+1);
+		}
+		change_size($("#change_size"));
+	}
+
+	/// Загрузить файлы
+	function input_add_slide(input) {
+		let file = input.files;
+		file_name = [];
+		i2 = 0;
+		load_files(file);
+	};
+
+	/// Загрузить файлы
+	function load_files(file) {
+		let reader = new FileReader();
+	  	reader.readAsDataURL(file[i2]);
+	  	file_name.push(file[i2].name);
+	  	reader.onload = function() {
+	    	if (reader.result.indexOf("data:image") != -1) {
+	    		addImage(file_name[i2], reader.result);
+	    		i2++;
+	    		if (file.length > i2) {
+	    			load_files(file)
+	    		} else {
+	    			div_add_slide();
+	    		}
+	    	}
+			if (reader.result.indexOf("data:video/") != -1) {
+				addVideo(file_name[i2], reader.result);
+				i2++;
+				if (file.length > i2) {
+	    			load_files(file)
+	    		} else {
+	    			div_add_slide();
+	    		}
+			}
+	  	}
+	  	reader.onerror = function() {
+	    	alert("Ошибка! Не удалось прочитать файлы");
+	    	i2++;
+	    	if (file.length > i2) {
+    			load_files(file)
+    		} else {
+    			div_add_slide();
+    		}
+	  	}
+	}
+
+
+	/// Добавить фото
+	function addImage(name, base64) {
+		name2 = ""
+		for (var i = 0; i + 1 < name.split(".").length; i++) {
+			name2 = name2 + name.split(".")[i];
+		}
+		$(".window").append(`
+			<div class="slide">
+				<div class="slide_preview" onclick="select_slide(this)" type="photo" style="background-image: url(`+base64+`)"></div>
+				<div class="slide_title">
+					<div class="slide_id"></div>
+					<input type="text" value="`+name2+`">
+					<div class="slide_etc">
+						<select onchange="slide_action(this)">
+							<option>_____________</option>
+							<option value="slide_action_1">Удалить фото</option>
+						</select>
+						<i class="fa fa-ellipsis-v color-b" aria-hidden="true"></i>
+					</div>
+				</div>
+			</div>`);
+	}
+
+	/// Добавить видео
+	function addVideo(name, base64) {
+		name2 = ""
+		for (var i = 0; i + 1 < name.split(".").length; i++) {
+			name2 = name2 + name.split(".")[i];
+		}
+
+		id_math = Math.random();
+		$(".window").append(`
+			<div class="slide">
+				<div class="slide_preview" onclick="select_slide(this)" type="video" s="`+id_math+`" src="`+base64+`">
+					<iframe src="data/player.html?s=`+id_math+`" style="width: 100%; height: 100%; border: 0px"></iframe>
+				</div>
+				<div class="slide_title">
+					<div class="slide_id"></div>
+					<input type="text" value="`+name2+`">
+					<div class="slide_etc">
+						<select onchange="slide_action(this)">
+							<option>_____________</option>
+							<option value="slide_action_1">Удалить видео</option>
+						</select>
+						<i class="fa fa-ellipsis-v color-b" aria-hidden="true"></i>
+					</div>
+				</div>
+			</div>`);
+		GET_VIDEO = base64;
+	}
+
+	/// Заблокировать перетаскивание
+	function block_sort(elem) {
+		if ($(elem).hasClass("style_false")) {
+			$(elem).removeClass("style_false");
+			$(elem).addClass("style_true");
+			$(elem).html(`<i class="fa fa-lock" aria-hidden="true"></i>`);
+			$('.window').sortable("disable");
+		} else {
+			$(elem).removeClass("style_true");
+			$(elem).addClass("style_false");
+			$(elem).html(`<i class="fa fa-unlock" aria-hidden="true"></i>`);
+			$('.window').sortable("enable");
+		}
+	}
+
+	/// Скорость перехода localStorage
+	if (localStorage.getItem('speed_slide') != null) {
+		if (localStorage.getItem('speed_slide') == "0") {
+			$("#speed_slide").removeClass("style_true");
+			$("#speed_slide").addClass("style_false");
+			$("#speed_slide").html(`0 <i class="fa fa-clock" style="font-size: 13px;" aria-hidden="true"></i>`);
+		} else {
+			$("#speed_slide").removeClass("style_false");
+			$("#speed_slide").addClass("style_true");
+			$("#speed_slide").html(`1 <i class="fa fa-clock" style="font-size: 13px;" aria-hidden="true"></i>`);
+		}
+	}
+
+	/// Скорость перехода
+	function speed_slide(elem) {
+		if ($(elem).hasClass("style_false")) {
+			$(elem).removeClass("style_false");
+			$(elem).addClass("style_true");
+			$(elem).html(`1 <i class="fa fa-clock" style="font-size: 13px;" aria-hidden="true"></i>`);
+			localStorage.setItem('speed_slide', 1);
+			bc.postMessage('<speed_slide>1'); 
+		} else {
+			$(elem).removeClass("style_true");
+			$(elem).addClass("style_false");
+			$(elem).html(`0 <i class="fa fa-clock" style="font-size: 13px;" aria-hidden="true"></i>`);
+			localStorage.setItem('speed_slide', 0);
+			bc.postMessage('<speed_slide>0'); 
+		}
+	}
+
+	/// FTB
+	function FTB(elem) {
+		if ($(elem).hasClass("style_false")) {
+			$(elem).removeClass("style_false");
+			$(elem).addClass("style_true");
+			bc.postMessage('<FTB>1'); 
+		} else {
+			$(elem).removeClass("style_true");
+			$(elem).addClass("style_false");
+			bc.postMessage('<FTB>0'); 
+		}
+	}
+
+	/// Сохранить проект
+	function save_project(elem) {
+		$(elem).removeClass("style_false");
+		$(elem).addClass("style_true");
+		setTimeout(function() {
+			$(elem).removeClass("style_true");
+			$(elem).addClass("style_false");
+		}, 500);
+		files = $(".slide");
+		txt = ""
+	 	for (var i = 0; i < files.length; i++) {
+	 		nn = "\n\n";
+	 		if (i == 0) {
+	 			nn = ""
+	 		}
+	 		if (files.eq(i).find(".slide_preview").attr("type") == "photo") {
+	 			txt = txt + nn + files.eq(i).find(".slide_preview").attr("style").replace('background-image: url(', "").replace(')', "")+"<SPLIT_KDK_FS>"+files.eq(i).find(".slide_title").find("input").val();
+	 		}
+
+	 		if (files.eq(i).find(".slide_preview").attr("type") == "video") {
+	 			txt = txt + nn + files.eq(i).find(".slide_preview").attr("src")+"<SPLIT_KDK_FS>"+files.eq(i).find(".slide_title").find("input").val();
+	 		}
+	 	}
+	 	downloadURL('data:text/plain;charset=UTF-8,'+txt, 'KDK-FS Проект');
+	}
+
+	/// Сохранить проект
+	var downloadURL = function(url, name) {
+    	var link = document.createElement('a');
+	    if(name == undefined || name == ''){name = url};
+	    link.setAttribute('href',url);
+	    link.setAttribute('download',name);
+	    onload = link.click();
+	};
+
+	/// Загрузить проект
+	function load_project(input) {
+		let file = input.files;
+		i2 = 0;
+		load_project_file(file)
+	}
+
+	/// Загрузить проект
+	function load_project_file(file) {
+		let reader = new FileReader();
+	  	reader.readAsText(file[i2]);
+	  	reader.onload = function() {
+			if (reader.result.indexOf("<SPLIT_KDK_FS>") != -1) {
+	    		files_split = reader.result.split("\n\n");
+	    		for (var i_files_split = 0; i_files_split < files_split.length; i_files_split++) {
+	    			if (files_split[i_files_split].indexOf("data:image") != -1) {
+	    				addImage(files_split[i_files_split].split("<SPLIT_KDK_FS>")[1]+".file", files_split[i_files_split].split("<SPLIT_KDK_FS>")[0]);
+	    			}
+
+	    			if (files_split[i_files_split].indexOf("data:video/") != -1) {
+	    				addVideo(files_split[i_files_split].split("<SPLIT_KDK_FS>")[1]+".file", files_split[i_files_split].split("<SPLIT_KDK_FS>")[0]);
+	    			}
+	    		}
+			}
+			i2++;
+			if (file.length > i2) {
+    			load_files(file)
+    		} else {
+    			div_add_slide();
+    		}
+	  	}
+		
+	  	reader.onerror = function() {
+	    	alert("Ошибка! Не удалось прочитать файл");
+	    	i2++;
+			if (file.length > i2) {
+				load_project(file)
+			}
+	  	}
+	}
+
+	/// FullScreen Main
+	function fullscreen_main(elem) {
+		if ($(elem).hasClass("style_false")) {
+			$(elem).removeClass("style_false");
+			$(elem).addClass("style_true");
+			openFullscreen();
+		} else {
+			$(elem).removeClass("style_true");
+			$(elem).addClass("style_false");
+			closeFullscreen();
+		}
+	}
+
+	/// Размер изображения localStorage
+	if (localStorage.getItem('display_size') != null) {
+	 	display_size(localStorage.getItem('display_size') * 1)
+	}
+
+	/// Размер изображения
+	function display_size(id) {
+		$(".display_size").removeClass("style_true");
+		$(".display_size").eq(id - 1).addClass("style_true");
+		localStorage.setItem('display_size', id);
+		bc.postMessage('<display_size>'+id); 
+	}
+
+	/// FullScreen Main
+	var elem = document.getElementsByTagName("body")[0];
+	function openFullscreen() {
+	  if (elem.requestFullscreen) {
+	    elem.requestFullscreen();
+	  } else if (elem.webkitRequestFullscreen) {
+	    elem.webkitRequestFullscreen();
+	  } else if (elem.msRequestFullscreen) {
+	    elem.msRequestFullscreen();
+	  }
+	}
+
+	function closeFullscreen() {
+	  if (document.exitFullscreen) {
+	    document.exitFullscreen();
+	  } else if (document.webkitExitFullscreen) {
+	    document.webkitExitFullscreen();
+	  } else if (document.msExitFullscreen) {
+	    document.msExitFullscreen();
+	  }
+	}
+
+	/// Изменить размер слайдов
+	function change_size(elem) {
+		size = $(elem).val() - 50;
+		$(".slide").css({"width": ""+(size + 330)});
+		$(".slide").css({"height": ""+(size + 205.6)})
+	}
+
+	/// Синхронизация
+	bc.addEventListener('message', function (mess) { 
+		mess = mess.data;
+		if (mess.indexOf("<GET_VIDEO>") != -1) {
+			for (var i = 0; i < $(".slide").length; i++) {
+				if ($(".slide").eq(i).find(".slide_preview").attr("type") == "video") {
+					if ($(".slide").eq(i).find(".slide_preview").attr("s") == mess.replace("<GET_VIDEO>", "")) {
+						bc.postMessage('<SEND_VIDEO>'+mess.replace("<GET_VIDEO>", "")+$(".slide").eq(i).find(".slide_preview").attr("src")); 
+					}
+				}
+			}
+		}
+
+		if (mess.indexOf("<VIDEO>") != -1) {
+			elem = $(".slide_preview[type='video']");
+			$(".window").find(".slide").find(".slide_title").css({"background": "var(--bg_menu)"});
+			for (var i = 0; i < elem.length; i++) {
+				if (elem.eq(i).attr("s") == mess.replace("<VIDEO>", "").split("<AAAA>")[0]) {
+					$(elem).eq(i).parent().find(".slide_title").css({"background": "var(--button)"});
+					break;
+				}
+			}
+		}
+	});
+	
+</script>
+</body>
+</html>

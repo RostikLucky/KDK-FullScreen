@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title></title>
+	<style type="text/css">
+		@font-face {
+			font-family: 'font1'; 
+			src: url(19847.otf); 
+		}
+		
+		* {
+			margin: 0px;
+			padding: 0px;
+			font-family: 'font1'; 
+		}
+
+		.player {
+			width: 100%;
+			height: 100vh;
+		}
+		.video-screen {
+			background: rgb(188,188,188);
+			display: block;
+			object-fit: cover;
+			margin: 0 auto;
+			transition: opacity .5s;
+			width: 100%;
+		}
+
+		.controls {
+			background: rgba(0, 0, 0, 0.5);
+			border-top: 5px solid rgba(0, 0, 0, 0.02);
+			border-bottom: 5px solid rgba(0, 0, 0, 0);
+			display: flex;
+			height: 25px;
+			justify-content: space-around;
+			opacity: 0;
+			margin: 0;
+			transition: .5s;
+			transition-property: opacity, visibility;
+			transform: translateY(-39px);
+			visibility: hidden;
+			width: 100%;
+		}
+
+		.controls * {
+			opacity: .7;
+			transition: opacity .3s;
+		}
+
+		.controls.active {
+			opacity: 1;
+			visibility: visible;
+		}
+
+		.fullscreen-button {
+			align-self: center;
+			border: 7px dashed white;
+			background: transparent;
+			height: 35px;
+			margin: 0 15px;
+			transition: scale .1s;
+			width: 40px;
+		}
+
+		.play {
+			align-self: center;
+			height: 10px;
+			margin: 0 20px;
+			width: 10px;
+		}
+
+		.play.start {
+			background: none;
+			border: 10px solid transparent;
+			border-right: none;
+			border-left: 15px solid white;
+			margin: 0;
+			margin-left: 15px;
+		}
+
+		.play.pause {
+			height: 15px;
+			background: none;
+			border: none;
+			border-left: 5px solid white;
+			border-right: 5px solid white;
+		 	padding: 2px;
+			margin: 0;
+			margin-left: 15px;
+			margin-right: 3px;
+		}
+
+		.volume-bar {
+			margin: 0 10px;
+			width: 40px;
+		}
+
+		.time-bar {
+			width: 100%;
+		}
+
+		.time {
+		    text-align: right;
+		    margin-right: 10px;
+		    color: white;
+		    font-size: 1.1rem;
+		    font-weight: 600;
+		    line-height: 24px;
+		    min-width: 105px;
+		    opacity: .9;
+		}
+
+		.speed {
+			align-self: center;
+			color: white;
+			font-weight: bold;
+			opacity: .9;
+			margin-right: 5px;
+			width: 50px;
+		}
+
+		::-webkit-media-controls {
+			display:none;
+		}
+
+		@media (hover: hover) {
+			.controls *:hover {
+				opacity: .9;
+			}
+		}
+	</style>
+</head>
+<body style="overflow: hidden;">
+<div class="player">
+	<video class="window_player" style="width: 100%; height: 100%;" class="video-screen" preload='auto' msallowfullscreen webkitallowfullscreen mozallowfullscreen allowfullscreen onclick="sync(this.currentTime)"></video>
+	<div class='controls active'>
+		<button class='play start'></button>
+		<input type="range" class='volume-bar' value='0' min='0' max='100'>
+		<input type="range" class='time-bar' value='0' min='0' max=''>
+		<time class='time'>N/A</time>
+	</div>
+</div>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript">
+	const bc = new BroadcastChannel('KDK-FS');
+	let params = (new URL(document.location)).searchParams; 
+
+	bc.postMessage('<GET_VIDEO>'+params.get("s")); 
+
+	bc.addEventListener('message', function (mess) { 
+		mess = mess.data;
+		if (mess.indexOf("<SEND_VIDEO>"+params.get("s")) != -1) {
+			video = mess.replace("<SEND_VIDEO>"+params.get("s"), "");
+			$(".window_player").eq(0).attr("src", mess.replace("<SEND_VIDEO>"+params.get("s"), ""));
+			player_e(0);
+		}
+
+		if (mess.indexOf("<PLAY_VIDEO>"+params.get("s")) != -1) {
+			player_e(1)
+		}
+
+		if (mess.indexOf("<PAUSE_VIDEO>"+params.get("s")) != -1) {
+			player_e(2)
+		}
+
+		if (mess.indexOf("<GET_TIME>"+params.get("s")) != -1) {
+			bc.postMessage('<POST_TIME>'+params.get("s")+"<AAAA>"+player_e(3)); 
+		}
+	});
+
+	function sync(time) {
+		bc.postMessage('<VIDEO>'+params.get("s")+"<AAAA>"+video+"<AAAA>"+time); 
+	}
+
+	function player_e(dada)	{
+		const controls		 = document.querySelector('.controls'),
+				fileChooser	= document.querySelector('.file-chooser'),
+				playButton	 = document.querySelector('.play'),
+				player			 = document.querySelector(".player"),
+				speedSelect	= document.querySelector('select'),
+				timeCounter	= document.querySelector('time'),
+				timeBar			= document.querySelector('.time-bar'),
+				video				= document.querySelector('video'),
+				volumeSlider = document.querySelector('.volume-bar');
+
+			let isMouseDown		 = false,
+				timeTotal			 = 0,
+				uiTimeout			 = '',
+				videoStatus		 = 'paused';
+
+		if (dada == 0) {
+
+			function onKeyDown(e) {
+				switch(e.key) {
+					case 'ArrowLeft':
+					case 'ArrowRight':
+						skip(e);
+						break;
+					case 'ArrowUp':
+					case 'ArrowDown':
+						adjustVolume(e);
+						break;
+					case ' ':
+						playVideo(e);
+						break;
+				}
+				showUI();
+			}
+
+			function showUI() {
+				if (uiTimeout) clearTimeout(uiTimeout);
+				controls.classList.add('active');
+				video.style.cursor = 'default';
+			}
+
+			function hideUI() {
+				if (uiTimeout) clearTimeout(uiTimeout);
+				if (video.paused) return; 
+
+				uiTimeout = setTimeout(() => {
+					controls.classList.remove('active');
+					setTimeout(() => video.style.cursor = 'none', 1000);
+				}, 2000);
+			}
+
+			function onMouseDown() {
+				isMouseDown = true;
+				showUI();
+			}
+
+			function onMouseUp() {
+				isMouseDown = false;
+				if (videoStatus === 'paused') return;
+
+				hideUI();
+				video.play();
+			}
+
+			function updatePlayState() {
+				video.paused ? 
+					(playButton.classList.add('start'), playButton.classList.remove('pause')) :
+					(playButton.classList.add('pause'), playButton.classList.remove('start'));
+
+				video.paused ? showUI() : hideUI();
+			}
+
+			const updatetimeBar = (e) => {
+				if (!isMouseDown && e.type === 'mousemove') return;
+
+				video.currentTime = timeBar.value;
+				if (!isMouseDown) return;
+
+				video.pause();
+				showUI();
+				hideUI();
+			}
+
+			function updateCurrentTime() {
+				let seconds = Math.floor(video.currentTime % 60);
+				let minutes = Math.floor(video.currentTime / 60);
+				seconds = seconds >= 10 ? seconds : '0' + seconds;
+				timeCounter.innerText = `${minutes}:${seconds} / ${timeTotal}`;
+				if (isMouseDown) return;
+
+				timeBar.value = video.currentTime;
+			}
+
+			function playVideo(e) {
+				e.preventDefault();
+				if (!video.readyState >= 2) return;
+
+				if (video.paused) {
+					video.play();
+					videoStatus = 'playing';
+					bc.postMessage('<PLAY>'+params.get("s")); 
+				} else {
+					video.pause(); 
+					videoStatus = 'paused';
+					bc.postMessage('<PAUSE>'+params.get("s")); 
+				}
+			}
+
+			function adjustVolume(e) {
+				if (e.type === 'mousemove' && !isMouseDown) return;
+				if (e.which === 1 ) return video.volume = volumeSlider.value / 100;
+
+				e.preventDefault();
+				if (e.key === 'ArrowUp' || e.wheelDelta > 0) {
+						video.volume = video.volume + .1 >= 1 ? 1 : video.volume + .1;
+						volumeSlider.value = video.volume * 100;
+						return;
+				}
+				if (e.key === 'ArrowDown' || e.wheelDelta < 0) {
+						video.volume = video.volume - .1 <= 0 ? 0 : video.volume - .1;
+						volumeSlider.value = video.volume * 100;
+						return;
+				}
+
+				video.volume = volumeSlider.value / 100;	
+			}
+
+			function skip(e) {
+				e.preventDefault();
+				switch(e.key) {
+					case 'ArrowLeft':
+						video.currentTime -= 10;
+						break;
+					case 'ArrowRight':
+						video.currentTime += 10;
+						break;
+				}
+				timeBar.value = video.currentTime;
+			}
+
+			function setVideoData() {
+				if (video.readyState) {
+					let seconds = Math.floor(video.duration % 60);
+					let minutes = Math.floor(video.duration / 60);
+					seconds = seconds >= 10 ? seconds : '0' + seconds;
+					timeTotal = `${minutes}:${seconds}`;
+					timeBar.max = video.duration;
+					timeCounter.innerText = `0:00 / ${timeTotal}`;
+					updateCurrentTime();
+				} 
+				video.volume = volumeSlider.value / 100;isMouseDown
+			}
+
+			///setVideoData();
+
+			controls.addEventListener('mousemove', () => { showUI(), hideUI() });
+			controls.addEventListener('mouseout', hideUI);
+			playButton.addEventListener('click', playVideo);
+			timeBar.addEventListener('change', updatetimeBar);
+
+			timeBar.addEventListener('change', atimeBar);
+
+			function atimeBar() {
+				bc.postMessage('<VIDEO_TIME>'+params.get("s")+"<AAAA>"+video.currentTime); 
+			}
+
+			timeBar.addEventListener('mousemove', updatetimeBar);
+			video.addEventListener('loadedmetadata', setVideoData);
+			video.addEventListener('play', updatePlayState);
+			video.addEventListener('pause', updatePlayState);
+			video.addEventListener('timeupdate', updateCurrentTime);
+			video.addEventListener('mouseout', hideUI);
+			video.addEventListener('mousemove', () => { showUI(), hideUI() });
+
+			volumeSlider.addEventListener('change', adjustVolume);
+			volumeSlider.addEventListener('mousemove', adjustVolume);
+			volumeSlider.addEventListener('wheel', adjustVolume);
+		} 
+
+		if (dada == 1) {
+			video.play();
+		}
+
+		if (dada == 2) {
+			video.pause();
+		}
+
+		if (dada == 3) {
+			return video.currentTime;
+		}
+	}
+</script>
+</body>
+</html>
